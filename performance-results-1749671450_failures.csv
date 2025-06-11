@@ -1,0 +1,3 @@
+Method,Name,Error,Occurrences
+POST,/add,CatchResponseError('Add task form returned status code: 200'),4
+GET,/toggle/12,CatchResponseError('Toggle task returned status code: 200'),1

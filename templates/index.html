@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .task-form {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .task-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .task-list {
+            padding: 30px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .task-item.completed {
+            background: #d4edda;
+            border-left-color: #28a745;
+            opacity: 0.8;
+        }
+
+        .task-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .task-text {
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .task-status {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .task-status.completed {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .task-count {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .form-group {
+                flex-direction: column;
+            }
+
+            .task-input {
+                margin-bottom: 10px;
+            }
+
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .task-actions {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Lista de Tareas</h1>
+            <p>Organiza tu día de manera eficiente</p>
+            {% if tasks %}
+                <div class="task-count">
+                    Total: {{ tasks|length }} tareas
+                    {% set completed_count = tasks|selectattr('completed')|list|length %}
+                    | Completadas: {{ completed_count }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="task-form">
+            <form action="{{ url_for('add_task') }}" method="POST">
+                <div class="form-group">
+                    <input
+                        type="text"
+                        name="task"
+                        class="task-input"
+                        placeholder="¿Qué necesitas hacer hoy?"
+                        required
+                        data-testid="task-input"
+                    >
+                    <button type="submit" class="btn btn-primary" data-testid="add-task-btn">
+                        ➕ Agregar Tarea
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="task-list">
+            {% if tasks %}
+                {% for task in tasks %}
+                <div class="task-item {% if task.completed %}completed{% endif %}" data-testid="task-item">
+                    <div class="task-content">
+                        <div class="task-status {% if task.completed %}completed{% endif %}">
+                            {% if task.completed %}✓{% endif %}
+                        </div>
+                        <div class="task-text {% if task.completed %}completed{% endif %}" data-testid="task-text">
+                            {{ task.text }}
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <a href="{{ url_for('toggle_task', task_id=task.id) }}"
+                           class="btn {% if task.completed %}btn-success{% else %}btn-success{% endif %}"
+                           data-testid="toggle-task-btn">
+                            {% if task.completed %}↩️ Deshacer{% else %}✅ Completar{% endif %}
+                        </a>
+                        <a href="{{ url_for('delete_task', task_id=task.id) }}"
+                           class="btn btn-danger"
+                           data-testid="delete-task-btn"
+                           onclick="return confirm('¿Estás seguro de que quieres eliminar esta tarea?')">
+                            🗑️ Eliminar
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state" data-testid="empty-state">
+                    <h3>🎯 ¡Todo despejado!</h3>
+                    <p>No tienes tareas pendientes. ¡Agrega una nueva tarea para comenzar!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "text": "Primera tarea",
+    "completed": true,
+    "created_at": "2025-06-11T15:27:40.222501"
+  },
+  {
+    "id": 2,
+    "text": "Segunda tarea",
+    "completed": false,
+    "created_at": "2025-06-11T15:27:42.057186"
+  },
+  {
+    "id": 3,
+    "text": "Tercera tarea",
+    "completed": false,
+    "created_at": "2025-06-11T15:27:44.504521"
+  }
+]
