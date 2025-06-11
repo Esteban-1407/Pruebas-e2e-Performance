@@ -29,7 +29,7 @@ class TaskListUser(HttpUser):
             "Actualizar dependencias del proyecto",
             "Escribir tests unitarios",
             "Optimizar base de datos",
-            "Configurar entorno de producción"
+            "Configurar entorno de producción",
         ]
 
         # Almacenar IDs de tareas creadas por este usuario
@@ -49,7 +49,9 @@ class TaskListUser(HttpUser):
                 else:
                     response.failure("Homepage doesn't contain expected content")
             else:
-                response.failure(f"Homepage returned status code: {response.status_code}")
+                response.failure(
+                    f"Homepage returned status code: {response.status_code}"
+                )
 
     @task(3)
     def add_task_via_form(self):
@@ -59,13 +61,15 @@ class TaskListUser(HttpUser):
         """
         task_text = random.choice(self.sample_tasks)
 
-        with self.client.post("/add",
-                              data={"task": task_text},
-                              catch_response=True) as response:
+        with self.client.post(
+            "/add", data={"task": task_text}, catch_response=True
+        ) as response:
             if response.status_code == 302:  # Redirect después de agregar
                 response.success()
             else:
-                response.failure(f"Add task form returned status code: {response.status_code}")
+                response.failure(
+                    f"Add task form returned status code: {response.status_code}"
+                )
 
     @task(2)
     def get_tasks_via_api(self):
@@ -81,7 +85,9 @@ class TaskListUser(HttpUser):
                         response.success()
                         # Guardar algunos IDs de tareas para operaciones posteriores
                         if tasks and len(self.created_task_ids) < 5:
-                            self.created_task_ids.extend([task['id'] for task in tasks[-2:]])
+                            self.created_task_ids.extend(
+                                [task["id"] for task in tasks[-2:]]
+                            )
                     else:
                         response.failure("API didn't return a list")
                 except json.JSONDecodeError:
@@ -98,22 +104,26 @@ class TaskListUser(HttpUser):
         task_text = random.choice(self.sample_tasks)
         task_data = {"text": task_text}
 
-        with self.client.post("/api/tasks",
-                              json=task_data,
-                              headers={"Content-Type": "application/json"},
-                              catch_response=True) as response:
+        with self.client.post(
+            "/api/tasks",
+            json=task_data,
+            headers={"Content-Type": "application/json"},
+            catch_response=True,
+        ) as response:
             if response.status_code == 201:
                 try:
                     created_task = response.json()
-                    if 'id' in created_task:
-                        self.created_task_ids.append(created_task['id'])
+                    if "id" in created_task:
+                        self.created_task_ids.append(created_task["id"])
                         response.success()
                     else:
                         response.failure("API response doesn't contain task ID")
                 except json.JSONDecodeError:
                     response.failure("API response is not valid JSON")
             else:
-                response.failure(f"API add task returned status code: {response.status_code}")
+                response.failure(
+                    f"API add task returned status code: {response.status_code}"
+                )
 
     @task(1)
     def toggle_task_status(self):
@@ -132,7 +142,9 @@ class TaskListUser(HttpUser):
                 if response.status_code == 302:  # Redirect después de toggle
                     response.success()
                 else:
-                    response.failure(f"Toggle task returned status code: {response.status_code}")
+                    response.failure(
+                        f"Toggle task returned status code: {response.status_code}"
+                    )
 
     @task(1)
     def delete_task(self):
@@ -145,13 +157,17 @@ class TaskListUser(HttpUser):
             self.get_tasks_via_api()
 
         if self.created_task_ids:
-            task_id = self.created_task_ids.pop()  # Remover el ID de nuestra lista local
+            task_id = (
+                self.created_task_ids.pop()
+            )  # Remover el ID de nuestra lista local
 
             with self.client.get(f"/delete/{task_id}", catch_response=True) as response:
                 if response.status_code == 302:  # Redirect después de eliminar
                     response.success()
                 else:
-                    response.failure(f"Delete task returned status code: {response.status_code}")
+                    response.failure(
+                        f"Delete task returned status code: {response.status_code}"
+                    )
 
     @task(1)
     def health_check(self):
@@ -163,14 +179,16 @@ class TaskListUser(HttpUser):
             if response.status_code == 200:
                 try:
                     health_data = response.json()
-                    if health_data.get('status') == 'healthy':
+                    if health_data.get("status") == "healthy":
                         response.success()
                     else:
                         response.failure("Health check status is not healthy")
                 except json.JSONDecodeError:
                     response.failure("Health check response is not valid JSON")
             else:
-                response.failure(f"Health check returned status code: {response.status_code}")
+                response.failure(
+                    f"Health check returned status code: {response.status_code}"
+                )
 
 
 class HeavyUser(HttpUser):
@@ -182,9 +200,7 @@ class HeavyUser(HttpUser):
 
     def on_start(self):
         """Inicialización del usuario pesado"""
-        self.sample_tasks = [
-            f"Tarea pesada {i}" for i in range(1, 21)
-        ]
+        self.sample_tasks = [f"Tarea pesada {i}" for i in range(1, 21)]
 
     @task(10)
     def rapid_homepage_access(self):
@@ -212,16 +228,18 @@ class MobileUser(HttpUser):
 
     def on_start(self):
         """Configurar headers para simular dispositivo móvil"""
-        self.client.headers.update({
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
-        })
+        self.client.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
+            }
+        )
 
         self.mobile_tasks = [
             "Revisar notificaciones",
             "Responder mensaje",
             "Tomar foto de documento",
             "Ubicación de reunión",
-            "Recordatorio medicamento"
+            "Recordatorio medicamento",
         ]
 
     @task(8)
@@ -282,7 +300,7 @@ class APIOnlyUser(HttpUser):
             "API Task - Batch Update",
             "API Task - Sync Operation",
             "API Task - Cleanup Job",
-            "API Task - Report Generation"
+            "API Task - Report Generation",
         ]
 
     @task(5)
@@ -290,11 +308,13 @@ class APIOnlyUser(HttpUser):
         """Crear tarea via API"""
         task_data = {"text": random.choice(self.api_tasks)}
 
-        with self.client.post("/api/tasks", json=task_data, catch_response=True) as response:
+        with self.client.post(
+            "/api/tasks", json=task_data, catch_response=True
+        ) as response:
             if response.status_code == 201:
                 try:
                     task = response.json()
-                    self.task_ids.append(task['id'])
+                    self.task_ids.append(task["id"])
                     response.success()
                 except (json.JSONDecodeError, KeyError):
                     response.failure("Invalid API response")
@@ -311,7 +331,7 @@ class APIOnlyUser(HttpUser):
                     if isinstance(tasks, list):
                         # Actualizar nuestra lista de IDs
                         if tasks:
-                            self.task_ids = [task['id'] for task in tasks[-5:]]
+                            self.task_ids = [task["id"] for task in tasks[-5:]]
                         response.success()
                     else:
                         response.failure("API response is not a list")
@@ -348,11 +368,16 @@ if __name__ == "__main__":
     print("- APIOnlyUser: Usuario que solo usa endpoints API")
     print("\n💡 Ejemplos de uso:")
     print("# Usuario normal (10 usuarios, 2 por segundo)")
-    print("locust -f tests/locustfile.py TaskListUser --host=http://localhost:5000 --users 10 --spawn-rate 2")
+    print(
+        "locust -f tests/locustfile.py TaskListUser --host=http://localhost:5000 --users 10 --spawn-rate 2"
+    )
     print("\n# Prueba de estrés (50 usuarios, 5 por segundo, 5 minutos)")
     print(
-        "locust -f tests/locustfile.py StressTestUser --host=http://localhost:5000 --users 50 --spawn-rate 5 --run-time 300s --headless")
+        "locust -f tests/locustfile.py StressTestUser --host=http://localhost:5000 --users 50 --spawn-rate 5 --run-time 300s --headless"
+    )
     print("\n# Múltiples tipos de usuarios")
-    print("locust -f tests/locustfile.py TaskListUser,MobileUser --host=http://localhost:5000")
+    print(
+        "locust -f tests/locustfile.py TaskListUser,MobileUser --host=http://localhost:5000"
+    )
     print("\n🌐 Interfaz web: http://localhost:8089")
     print("=" * 60)

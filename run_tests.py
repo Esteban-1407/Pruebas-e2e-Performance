@@ -35,7 +35,7 @@ class TestRunner:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                cwd=self.base_dir
+                cwd=self.base_dir,
             )
 
             if result.stdout:
@@ -59,16 +59,16 @@ class TestRunner:
         print(f"🚀 Iniciando aplicación Flask en puerto {port}...")
 
         env = os.environ.copy()
-        env['FLASK_ENV'] = 'testing'
-        env['PORT'] = str(port)
+        env["FLASK_ENV"] = "testing"
+        env["PORT"] = str(port)
 
         try:
             self.flask_process = subprocess.Popen(
-                [sys.executable, 'app.py'],
+                [sys.executable, "app.py"],
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                cwd=self.base_dir
+                cwd=self.base_dir,
             )
 
             # Esperar a que la app esté lista
@@ -76,7 +76,10 @@ class TestRunner:
             for i in range(max_attempts):
                 try:
                     import requests
-                    response = requests.get(f'http://localhost:{port}/health', timeout=2)
+
+                    response = requests.get(
+                        f"http://localhost:{port}/health", timeout=2
+                    )
                     if response.status_code == 200:
                         print(f"✅ Aplicación Flask iniciada en puerto {port}")
                         return True
@@ -127,22 +130,20 @@ class TestRunner:
         if verbose:
             cmd_parts.extend(["-v", "--tb=short"])
 
-        cmd_parts.extend([
-            "--color=yes",
-            "--durations=10",
-            "-x"  # Parar en el primer fallo
-        ])
+        cmd_parts.extend(
+            ["--color=yes", "--durations=10", "-x"]  # Parar en el primer fallo
+        )
 
         command = " ".join(cmd_parts)
         success, output = self.run_command(
-            command,
-            "Ejecutando pruebas End-to-End",
-            timeout=300
+            command, "Ejecutando pruebas End-to-End", timeout=300
         )
 
         return success
 
-    def run_performance_tests(self, users=10, duration=60, host="http://localhost:5000"):
+    def run_performance_tests(
+        self, users=10, duration=60, host="http://localhost:5000"
+    ):
         """Ejecuta las pruebas de performance con Locust"""
         print("\n" + "=" * 60)
         print("📊 EJECUTANDO PRUEBAS DE PERFORMANCE")
@@ -172,7 +173,7 @@ class TestRunner:
         success, output = self.run_command(
             command,
             f"Ejecutando pruebas de performance ({users} usuarios, {duration}s)",
-            timeout=duration + 60
+            timeout=duration + 60,
         )
 
         if success:
@@ -190,10 +191,14 @@ class TestRunner:
         print("=" * 60)
 
         checks = [
-            ("flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics",
-             "Verificando errores críticos de sintaxis"),
-            ("flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics",
-             "Verificando estilo de código"),
+            (
+                "flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics",
+                "Verificando errores críticos de sintaxis",
+            ),
+            (
+                "flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics",
+                "Verificando estilo de código",
+            ),
         ]
 
         all_passed = True
@@ -210,46 +215,44 @@ class TestRunner:
         print("🎯 INICIANDO SUITE COMPLETA DE PRUEBAS")
         print("=" * 60)
 
-        results = {
-            'lint': False,
-            'e2e': False,
-            'performance': False
-        }
+        results = {"lint": False, "e2e": False, "performance": False}
 
         try:
             # 1. Verificaciones de linting
             if not args.skip_lint:
                 print("\n📋 Paso 1: Verificaciones de código")
-                results['lint'] = self.run_lint_checks()
+                results["lint"] = self.run_lint_checks()
             else:
                 print("\n⏭️  Saltando verificaciones de linting")
-                results['lint'] = True
+                results["lint"] = True
 
             # 2. Iniciar Flask para las pruebas
             if not args.skip_e2e or not args.skip_performance:
                 if not self.start_flask_app(port=args.port):
-                    print("❌ No se pudo iniciar Flask. Saltando pruebas que requieren servidor.")
+                    print(
+                        "❌ No se pudo iniciar Flask. Saltando pruebas que requieren servidor."
+                    )
                     return results
 
             # 3. Pruebas E2E
             if not args.skip_e2e:
                 print("\n📋 Paso 2: Pruebas End-to-End")
-                results['e2e'] = self.run_e2e_tests(verbose=args.verbose)
+                results["e2e"] = self.run_e2e_tests(verbose=args.verbose)
             else:
                 print("\n⏭️  Saltando pruebas E2E")
-                results['e2e'] = True
+                results["e2e"] = True
 
             # 4. Pruebas de Performance
             if not args.skip_performance:
                 print("\n📋 Paso 3: Pruebas de Performance")
-                results['performance'] = self.run_performance_tests(
+                results["performance"] = self.run_performance_tests(
                     users=args.users,
                     duration=args.duration,
-                    host=f"http://localhost:{args.port}"
+                    host=f"http://localhost:{args.port}",
                 )
             else:
                 print("\n⏭️  Saltando pruebas de performance")
-                results['performance'] = True
+                results["performance"] = True
 
         finally:
             # Limpiar recursos
@@ -283,7 +286,9 @@ class TestRunner:
 
         if executed_tests:
             success_rate = (len(passed_tests) / len(executed_tests)) * 100
-            print(f"\n📈 Tasa de éxito: {success_rate:.1f}% ({len(passed_tests)}/{len(executed_tests)})")
+            print(
+                f"\n📈 Tasa de éxito: {success_rate:.1f}% ({len(passed_tests)}/{len(executed_tests)})"
+            )
 
         # Determinar resultado general
         overall_success = all(result is not False for result in results.values())
@@ -311,38 +316,58 @@ Ejemplos de uso:
   python run_tests.py --e2e-only                  # Solo pruebas E2E
   python run_tests.py --performance-only --users 20 --duration 120
   python run_tests.py --quick                     # Pruebas rápidas
-        """
+        """,
     )
 
     # Argumentos de control de pruebas
-    parser.add_argument('--skip-lint', action='store_true',
-                        help='Saltar verificaciones de linting')
-    parser.add_argument('--skip-e2e', action='store_true',
-                        help='Saltar pruebas E2E')
-    parser.add_argument('--skip-performance', action='store_true',
-                        help='Saltar pruebas de performance')
+    parser.add_argument(
+        "--skip-lint", action="store_true", help="Saltar verificaciones de linting"
+    )
+    parser.add_argument("--skip-e2e", action="store_true", help="Saltar pruebas E2E")
+    parser.add_argument(
+        "--skip-performance", action="store_true", help="Saltar pruebas de performance"
+    )
 
     # Atajos
-    parser.add_argument('--e2e-only', action='store_true',
-                        help='Ejecutar solo pruebas E2E')
-    parser.add_argument('--performance-only', action='store_true',
-                        help='Ejecutar solo pruebas de performance')
-    parser.add_argument('--lint-only', action='store_true',
-                        help='Ejecutar solo verificaciones de linting')
-    parser.add_argument('--quick', action='store_true',
-                        help='Pruebas rápidas (lint + E2E básico)')
+    parser.add_argument(
+        "--e2e-only", action="store_true", help="Ejecutar solo pruebas E2E"
+    )
+    parser.add_argument(
+        "--performance-only",
+        action="store_true",
+        help="Ejecutar solo pruebas de performance",
+    )
+    parser.add_argument(
+        "--lint-only",
+        action="store_true",
+        help="Ejecutar solo verificaciones de linting",
+    )
+    parser.add_argument(
+        "--quick", action="store_true", help="Pruebas rápidas (lint + E2E básico)"
+    )
 
     # Configuración de pruebas de performance
-    parser.add_argument('--users', type=int, default=10,
-                        help='Número de usuarios para pruebas de performance (default: 10)')
-    parser.add_argument('--duration', type=int, default=60,
-                        help='Duración de pruebas de performance en segundos (default: 60)')
+    parser.add_argument(
+        "--users",
+        type=int,
+        default=10,
+        help="Número de usuarios para pruebas de performance (default: 10)",
+    )
+    parser.add_argument(
+        "--duration",
+        type=int,
+        default=60,
+        help="Duración de pruebas de performance en segundos (default: 60)",
+    )
 
     # Configuración general
-    parser.add_argument('--port', type=int, default=5000,
-                        help='Puerto para la aplicación Flask (default: 5000)')
-    parser.add_argument('--verbose', action='store_true',
-                        help='Output detallado')
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=5000,
+        help="Puerto para la aplicación Flask (default: 5000)",
+    )
+    parser.add_argument("--verbose", action="store_true", help="Output detallado")
 
     args = parser.parse_args()
 

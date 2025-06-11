@@ -16,25 +16,24 @@ class FlaskAppRunner:
 
         # Configurar entorno
         env = os.environ.copy()
-        env['FLASK_ENV'] = 'testing'
-        env['PORT'] = str(self.port)
-        env['HOST'] = '127.0.0.1'
+        env["FLASK_ENV"] = "testing"
+        env["PORT"] = str(self.port)
+        env["HOST"] = "127.0.0.1"
         # Configurar encoding para Windows
-        env['PYTHONIOENCODING'] = 'utf-8'
+        env["PYTHONIOENCODING"] = "utf-8"
 
         # Cambiar al directorio del proyecto
         project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
         try:
             # Iniciar Flask
-            self.process = subprocess.Popen([
-                sys.executable, 'app.py'
-            ],
+            self.process = subprocess.Popen(
+                [sys.executable, "app.py"],
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd=project_dir,
-                text=True
+                text=True,
             )
 
             # Esperar a que la aplicación esté lista
@@ -43,7 +42,9 @@ class FlaskAppRunner:
                 if self.process.poll() is not None:
                     # El proceso terminó, leer la salida de error
                     stdout, stderr = self.process.communicate()
-                    raise Exception(f"Flask app failed to start.\nSTDOUT: {stdout}\nSTDERR: {stderr}")
+                    raise Exception(
+                        f"Flask app failed to start.\nSTDOUT: {stdout}\nSTDERR: {stderr}"
+                    )
 
                 try:
                     response = requests.get(f"{self.base_url}/", timeout=5)
@@ -110,7 +111,7 @@ def driver():
     chrome_options.add_argument("--disable-ipc-flooding-protection")
 
     # Configuración adicional para Windows
-    if os.name == 'nt':
+    if os.name == "nt":
         chrome_options.add_argument("--disable-background-timer-throttling")
         chrome_options.add_argument("--disable-backgrounding-occluded-windows")
         chrome_options.add_argument("--disable-renderer-backgrounding")
@@ -163,7 +164,9 @@ class TestTaskListE2E:
         """Click seguro con scroll si es necesario"""
         try:
             # Scroll al elemento
-            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+            driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center'});", element
+            )
             time.sleep(0.5)
 
             # Esperar que sea clickeable
@@ -185,7 +188,9 @@ class TestTaskListE2E:
 
         # Verificar que Flask está respondiendo
         response = requests.get(flask_app.base_url, timeout=10)
-        assert response.status_code == 200, f"Flask no responde correctamente: {response.status_code}"
+        assert (
+            response.status_code == 200
+        ), f"Flask no responde correctamente: {response.status_code}"
 
         driver.get(flask_app.base_url)
         self.wait_for_page_load(driver)
@@ -258,7 +263,9 @@ class TestTaskListE2E:
         self._ensure_task_exists(driver, f"Tarea para completar {int(time.time())}")
 
         # Encontrar el botón de completar tarea
-        toggle_button = self.safe_find_element(driver, "[data-testid='toggle-task-btn']")
+        toggle_button = self.safe_find_element(
+            driver, "[data-testid='toggle-task-btn']"
+        )
         assert toggle_button is not None
 
         initial_text = toggle_button.text
@@ -269,7 +276,9 @@ class TestTaskListE2E:
         self.wait_for_page_load(driver)
 
         # Verificar cambio en el botón
-        new_toggle_button = self.safe_find_element(driver, "[data-testid='toggle-task-btn']")
+        new_toggle_button = self.safe_find_element(
+            driver, "[data-testid='toggle-task-btn']"
+        )
         if new_toggle_button:
             assert new_toggle_button.text != initial_text, "El botón no cambió su texto"
 
@@ -286,11 +295,15 @@ class TestTaskListE2E:
         self._ensure_task_exists(driver, f"Tarea para eliminar {int(time.time())}")
 
         # Contar tareas iniciales
-        initial_tasks = driver.find_elements(By.CSS_SELECTOR, "[data-testid='task-item']")
+        initial_tasks = driver.find_elements(
+            By.CSS_SELECTOR, "[data-testid='task-item']"
+        )
         initial_count = len(initial_tasks)
 
         # Eliminar la primera tarea
-        delete_button = self.safe_find_element(driver, "[data-testid='delete-task-btn']")
+        delete_button = self.safe_find_element(
+            driver, "[data-testid='delete-task-btn']"
+        )
         assert delete_button is not None
 
         # Manejar el diálogo de confirmación
@@ -302,9 +315,12 @@ class TestTaskListE2E:
         self.wait_for_page_load(driver)
 
         # Verificar que la tarea fue eliminada
-        remaining_tasks = driver.find_elements(By.CSS_SELECTOR, "[data-testid='task-item']")
-        assert len(
-            remaining_tasks) == initial_count - 1, f"Esperaba {initial_count - 1} tareas, encontré {len(remaining_tasks)}"
+        remaining_tasks = driver.find_elements(
+            By.CSS_SELECTOR, "[data-testid='task-item']"
+        )
+        assert (
+            len(remaining_tasks) == initial_count - 1
+        ), f"Esperaba {initial_count - 1} tareas, encontré {len(remaining_tasks)}"
 
         print("[TEST] Tarea eliminada correctamente")
 
@@ -320,7 +336,11 @@ class TestTaskListE2E:
 
         # Agregar múltiples tareas
         timestamp = int(time.time())
-        tasks = [f"Primera tarea {timestamp}", f"Segunda tarea {timestamp}", f"Tercera tarea {timestamp}"]
+        tasks = [
+            f"Primera tarea {timestamp}",
+            f"Segunda tarea {timestamp}",
+            f"Tercera tarea {timestamp}",
+        ]
 
         for i, task_text in enumerate(tasks):
             task_input = self.safe_find_element(driver, "[data-testid='task-input']")
@@ -340,10 +360,14 @@ class TestTaskListE2E:
 
         # Verificar que todas las tareas fueron agregadas
         task_items = driver.find_elements(By.CSS_SELECTOR, "[data-testid='task-item']")
-        assert len(task_items) >= len(tasks), f"Esperaba al menos {len(tasks)} tareas, encontré {len(task_items)}"
+        assert len(task_items) >= len(
+            tasks
+        ), f"Esperaba al menos {len(tasks)} tareas, encontré {len(task_items)}"
 
         # Completar la primera tarea si existe
-        toggle_buttons = driver.find_elements(By.CSS_SELECTOR, "[data-testid='toggle-task-btn']")
+        toggle_buttons = driver.find_elements(
+            By.CSS_SELECTOR, "[data-testid='toggle-task-btn']"
+        )
         if toggle_buttons:
             self.safe_click(driver, toggle_buttons[0])
             time.sleep(3)
@@ -377,7 +401,9 @@ class TestTaskListE2E:
                 task_input.clear()
                 task_input.send_keys(task_text)
 
-                add_button = self.safe_find_element(driver, "[data-testid='add-task-btn']")
+                add_button = self.safe_find_element(
+                    driver, "[data-testid='add-task-btn']"
+                )
                 if add_button:
                     self.safe_click(driver, add_button)
                     time.sleep(3)
@@ -391,7 +417,9 @@ class TestTaskListE2E:
         attempts = 0
 
         while attempts < max_attempts:
-            delete_buttons = driver.find_elements(By.CSS_SELECTOR, "[data-testid='delete-task-btn']")
+            delete_buttons = driver.find_elements(
+                By.CSS_SELECTOR, "[data-testid='delete-task-btn']"
+            )
 
             if not delete_buttons:
                 print(f"  [TEST] Todas las tareas eliminadas (intentos: {attempts})")
@@ -416,7 +444,7 @@ if __name__ == "__main__":
     # Ejecutar con pytest
     import pytest
 
-    pytest.main([__file__, "-v", "--tb=short"]);
+    pytest.main([__file__, "-v", "--tb=short"])
     import pytest
 import time
 import os
@@ -447,25 +475,24 @@ class FlaskAppRunner:
 
         # Configurar entorno
         env = os.environ.copy()
-        env['FLASK_ENV'] = 'testing'
-        env['PORT'] = str(self.port)
-        env['HOST'] = '127.0.0.1'
+        env["FLASK_ENV"] = "testing"
+        env["PORT"] = str(self.port)
+        env["HOST"] = "127.0.0.1"
         # Configurar encoding para Windows
-        env['PYTHONIOENCODING'] = 'utf-8'
+        env["PYTHONIOENCODING"] = "utf-8"
 
         # Cambiar al directorio del proyecto
         project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
         try:
             # Iniciar Flask
-            self.process = subprocess.Popen([
-                sys.executable, 'app.py'
-            ],
+            self.process = subprocess.Popen(
+                [sys.executable, "app.py"],
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd=project_dir,
-                text=True
+                text=True,
             )
 
             # Esperar a que la aplicación esté lista
@@ -474,7 +501,9 @@ class FlaskAppRunner:
                 if self.process.poll() is not None:
                     # El proceso terminó, leer la salida de error
                     stdout, stderr = self.process.communicate()
-                    raise Exception(f"Flask app failed to start.\nSTDOUT: {stdout}\nSTDERR: {stderr}")
+                    raise Exception(
+                        f"Flask app failed to start.\nSTDOUT: {stdout}\nSTDERR: {stderr}"
+                    )
 
                 try:
                     response = requests.get(f"{self.base_url}/health", timeout=2)
@@ -537,7 +566,7 @@ def driver():
     chrome_options.add_argument("--disable-features=VizDisplayCompositor")
 
     # Configuración adicional para Windows
-    if os.name == 'nt':
+    if os.name == "nt":
         chrome_options.add_argument("--disable-background-timer-throttling")
         chrome_options.add_argument("--disable-backgrounding-occluded-windows")
         chrome_options.add_argument("--disable-renderer-backgrounding")
@@ -571,7 +600,9 @@ class TestTaskListE2E:
 
         # Verificar que Flask está respondiendo
         response = requests.get(flask_app.base_url)
-        assert response.status_code == 200, f"Flask no responde correctamente: {response.status_code}"
+        assert (
+            response.status_code == 200
+        ), f"Flask no responde correctamente: {response.status_code}"
 
         driver.get(flask_app.base_url)
 
@@ -586,7 +617,9 @@ class TestTaskListE2E:
         task_input = driver.find_element(By.CSS_SELECTOR, "[data-testid='task-input']")
         assert task_input.is_displayed()
 
-        add_button = driver.find_element(By.CSS_SELECTOR, "[data-testid='add-task-btn']")
+        add_button = driver.find_element(
+            By.CSS_SELECTOR, "[data-testid='add-task-btn']"
+        )
         assert add_button.is_displayed()
 
         print("[TEST] Página carga correctamente")
@@ -602,7 +635,9 @@ class TestTaskListE2E:
 
         # Verificar estado inicial vacío
         try:
-            empty_state = driver.find_element(By.CSS_SELECTOR, "[data-testid='empty-state']")
+            empty_state = driver.find_element(
+                By.CSS_SELECTOR, "[data-testid='empty-state']"
+            )
             assert empty_state.is_displayed()
         except:
             print("[TEST] No se encontró estado vacío, continuando...")
@@ -613,19 +648,25 @@ class TestTaskListE2E:
         task_input.clear()
         task_input.send_keys(task_text)
 
-        add_button = driver.find_element(By.CSS_SELECTOR, "[data-testid='add-task-btn']")
+        add_button = driver.find_element(
+            By.CSS_SELECTOR, "[data-testid='add-task-btn']"
+        )
         add_button.click()
 
         # Esperar a que la página se recargue y verificar que la tarea fue agregada
         WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='task-item']"))
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "[data-testid='task-item']")
+            )
         )
 
         # Verificar que la tarea aparece en la lista
         task_items = driver.find_elements(By.CSS_SELECTOR, "[data-testid='task-item']")
         assert len(task_items) >= 1
 
-        task_text_element = driver.find_element(By.CSS_SELECTOR, "[data-testid='task-text']")
+        task_text_element = driver.find_element(
+            By.CSS_SELECTOR, "[data-testid='task-text']"
+        )
         assert task_text in task_text_element.text
 
         print("[TEST] Tarea agregada correctamente")
@@ -640,7 +681,9 @@ class TestTaskListE2E:
         self._ensure_task_exists(driver, "Tarea para completar")
 
         # Encontrar el botón de completar tarea
-        toggle_button = driver.find_element(By.CSS_SELECTOR, "[data-testid='toggle-task-btn']")
+        toggle_button = driver.find_element(
+            By.CSS_SELECTOR, "[data-testid='toggle-task-btn']"
+        )
         initial_text = toggle_button.text
         toggle_button.click()
 
@@ -652,7 +695,9 @@ class TestTaskListE2E:
         task_classes = task_item.get_attribute("class")
 
         # El botón debería haber cambiado su texto
-        new_toggle_button = driver.find_element(By.CSS_SELECTOR, "[data-testid='toggle-task-btn']")
+        new_toggle_button = driver.find_element(
+            By.CSS_SELECTOR, "[data-testid='toggle-task-btn']"
+        )
         assert new_toggle_button.text != initial_text
 
         print("[TEST] Tarea completada correctamente")
@@ -667,11 +712,15 @@ class TestTaskListE2E:
         self._ensure_task_exists(driver, "Tarea para eliminar")
 
         # Contar tareas iniciales
-        initial_tasks = driver.find_elements(By.CSS_SELECTOR, "[data-testid='task-item']")
+        initial_tasks = driver.find_elements(
+            By.CSS_SELECTOR, "[data-testid='task-item']"
+        )
         initial_count = len(initial_tasks)
 
         # Eliminar la primera tarea
-        delete_button = driver.find_element(By.CSS_SELECTOR, "[data-testid='delete-task-btn']")
+        delete_button = driver.find_element(
+            By.CSS_SELECTOR, "[data-testid='delete-task-btn']"
+        )
 
         # Manejar el diálogo de confirmación
         driver.execute_script("window.confirm = function(){return true;}")
@@ -681,7 +730,9 @@ class TestTaskListE2E:
         time.sleep(3)
 
         # Verificar que la tarea fue eliminada
-        remaining_tasks = driver.find_elements(By.CSS_SELECTOR, "[data-testid='task-item']")
+        remaining_tasks = driver.find_elements(
+            By.CSS_SELECTOR, "[data-testid='task-item']"
+        )
         assert len(remaining_tasks) == initial_count - 1
 
         print("[TEST] Tarea eliminada correctamente")
@@ -699,11 +750,15 @@ class TestTaskListE2E:
         tasks = ["Primera tarea", "Segunda tarea", "Tercera tarea"]
 
         for i, task_text in enumerate(tasks):
-            task_input = driver.find_element(By.CSS_SELECTOR, "[data-testid='task-input']")
+            task_input = driver.find_element(
+                By.CSS_SELECTOR, "[data-testid='task-input']"
+            )
             task_input.clear()
             task_input.send_keys(task_text)
 
-            add_button = driver.find_element(By.CSS_SELECTOR, "[data-testid='add-task-btn']")
+            add_button = driver.find_element(
+                By.CSS_SELECTOR, "[data-testid='add-task-btn']"
+            )
             add_button.click()
             time.sleep(2)  # Pausa entre tareas
 
@@ -714,7 +769,9 @@ class TestTaskListE2E:
         assert len(task_items) >= len(tasks)
 
         # Completar la primera tarea
-        first_toggle_button = driver.find_elements(By.CSS_SELECTOR, "[data-testid='toggle-task-btn']")[0]
+        first_toggle_button = driver.find_elements(
+            By.CSS_SELECTOR, "[data-testid='toggle-task-btn']"
+        )[0]
         first_toggle_button.click()
         time.sleep(2)
 
@@ -739,16 +796,22 @@ class TestTaskListE2E:
         if len(task_items) == 0:
             print(f"  [TEST] Agregando tarea de prueba: {task_text}")
             # Agregar una tarea si no hay ninguna
-            task_input = driver.find_element(By.CSS_SELECTOR, "[data-testid='task-input']")
+            task_input = driver.find_element(
+                By.CSS_SELECTOR, "[data-testid='task-input']"
+            )
             task_input.clear()
             task_input.send_keys(task_text)
 
-            add_button = driver.find_element(By.CSS_SELECTOR, "[data-testid='add-task-btn']")
+            add_button = driver.find_element(
+                By.CSS_SELECTOR, "[data-testid='add-task-btn']"
+            )
             add_button.click()
 
             # Esperar a que se agregue la tarea
             WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='task-item']"))
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "[data-testid='task-item']")
+                )
             )
 
     def _clear_all_tasks(self, driver):
@@ -759,7 +822,9 @@ class TestTaskListE2E:
         attempts = 0
 
         while attempts < max_attempts:
-            delete_buttons = driver.find_elements(By.CSS_SELECTOR, "[data-testid='delete-task-btn']")
+            delete_buttons = driver.find_elements(
+                By.CSS_SELECTOR, "[data-testid='delete-task-btn']"
+            )
 
             if not delete_buttons:
                 print(f"  [TEST] Todas las tareas eliminadas (intentos: {attempts})")
