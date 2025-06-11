@@ -59,15 +59,49 @@ jobs:
       run: |
         cat > templates/index.html << 'EOF'
         <!DOCTYPE html>
-        <html>
-        <head><title>Task List</title></head>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Lista de Tareas</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                .container { max-width: 600px; margin: 0 auto; }
+                .task-form { margin-bottom: 20px; }
+                .task-input { padding: 10px; width: 70%; }
+                .btn { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+                .task-item { padding: 10px; margin: 5px 0; background: #f8f9fa; border-radius: 5px; }
+                .completed { text-decoration: line-through; opacity: 0.6; }
+            </style>
+        </head>
         <body>
-        <h1>Lista de Tareas</h1>
-        <form method="POST" action="/add">
-          <input type="text" name="task" data-testid="task-input" placeholder="Nueva tarea..." required>
-          <button type="submit" data-testid="add-task-btn">Agregar</button>
-        </form>
-        <div data-testid="empty-state">No hay tareas</div>
+            <div class="container">
+                <h1>Lista de Tareas</h1>
+                
+                <div class="task-form">
+                    <form action="{{ url_for('add_task') }}" method="POST">
+                        <input type="text" name="task" class="task-input" placeholder="Nueva tarea..." required data-testid="task-input">
+                        <button type="submit" class="btn" data-testid="add-task-btn">Agregar</button>
+                    </form>
+                </div>
+
+                <div class="task-list">
+                    {% if tasks %}
+                        {% for task in tasks %}
+                        <div class="task-item {% if task.completed %}completed{% endif %}" data-testid="task-item">
+                            <span data-testid="task-text">{{ task.text }}</span>
+                            <a href="{{ url_for('toggle_task', task_id=task.id) }}" data-testid="toggle-task-btn">
+                                {% if task.completed %}Deshacer{% else %}Completar{% endif %}
+                            </a>
+                            <a href="{{ url_for('delete_task', task_id=task.id) }}" data-testid="delete-task-btn" 
+                               onclick="return confirm('¿Eliminar esta tarea?')">Eliminar</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div data-testid="empty-state">No hay tareas. ¡Agrega una nueva!</div>
+                    {% endif %}
+                </div>
+            </div>
         </body>
         </html>
         EOF
@@ -106,15 +140,49 @@ jobs:
         mkdir -p templates
         cat > templates/index.html << 'EOF'
         <!DOCTYPE html>
-        <html>
-        <head><title>Task List</title></head>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Lista de Tareas</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                .container { max-width: 600px; margin: 0 auto; }
+                .task-form { margin-bottom: 20px; }
+                .task-input { padding: 10px; width: 70%; }
+                .btn { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+                .task-item { padding: 10px; margin: 5px 0; background: #f8f9fa; border-radius: 5px; }
+                .completed { text-decoration: line-through; opacity: 0.6; }
+            </style>
+        </head>
         <body>
-        <h1>Lista de Tareas</h1>
-        <form method="POST" action="/add">
-          <input type="text" name="task" data-testid="task-input" placeholder="Nueva tarea..." required>
-          <button type="submit" data-testid="add-task-btn">Agregar</button>
-        </form>
-        <div data-testid="empty-state">No hay tareas</div>
+            <div class="container">
+                <h1>Lista de Tareas</h1>
+                
+                <div class="task-form">
+                    <form action="{{ url_for('add_task') }}" method="POST">
+                        <input type="text" name="task" class="task-input" placeholder="Nueva tarea..." required data-testid="task-input">
+                        <button type="submit" class="btn" data-testid="add-task-btn">Agregar</button>
+                    </form>
+                </div>
+
+                <div class="task-list">
+                    {% if tasks %}
+                        {% for task in tasks %}
+                        <div class="task-item {% if task.completed %}completed{% endif %}" data-testid="task-item">
+                            <span data-testid="task-text">{{ task.text }}</span>
+                            <a href="{{ url_for('toggle_task', task_id=task.id) }}" data-testid="toggle-task-btn">
+                                {% if task.completed %}Deshacer{% else %}Completar{% endif %}
+                            </a>
+                            <a href="{{ url_for('delete_task', task_id=task.id) }}" data-testid="delete-task-btn" 
+                               onclick="return confirm('¿Eliminar esta tarea?')">Eliminar</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div data-testid="empty-state">No hay tareas. ¡Agrega una nueva!</div>
+                    {% endif %}
+                </div>
+            </div>
         </body>
         </html>
         EOF
@@ -133,9 +201,10 @@ jobs:
       run: |
         python app.py &
         echo $! > flask_app.pid
-        sleep 5
+        sleep 10
       env:
         FLASK_ENV: testing
+        PORT: 5000
 
     - name: Wait for Flask app to be ready
       run: |
@@ -145,10 +214,12 @@ jobs:
     - name: Run E2E tests
       run: |
         export DISPLAY=:99
-        Xvfb :99 -screen 0 1920x1080x24 &
-        python -m pytest tests/test_e2e.py -v --tb=short
+        Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+        sleep 2
+        python -m pytest tests/test_e2e.py -v --tb=short -x
       env:
         PYTHONPATH: .
+        PYTEST_TIMEOUT: 300
 
     - name: Stop Flask app
       run: |
@@ -193,15 +264,49 @@ jobs:
         mkdir -p templates
         cat > templates/index.html << 'EOF'
         <!DOCTYPE html>
-        <html>
-        <head><title>Task List</title></head>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Lista de Tareas</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                .container { max-width: 600px; margin: 0 auto; }
+                .task-form { margin-bottom: 20px; }
+                .task-input { padding: 10px; width: 70%; }
+                .btn { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+                .task-item { padding: 10px; margin: 5px 0; background: #f8f9fa; border-radius: 5px; }
+                .completed { text-decoration: line-through; opacity: 0.6; }
+            </style>
+        </head>
         <body>
-        <h1>Lista de Tareas</h1>
-        <form method="POST" action="/add">
-          <input type="text" name="task" data-testid="task-input" placeholder="Nueva tarea..." required>
-          <button type="submit" data-testid="add-task-btn">Agregar</button>
-        </form>
-        <div data-testid="empty-state">No hay tareas</div>
+            <div class="container">
+                <h1>Lista de Tareas</h1>
+                
+                <div class="task-form">
+                    <form action="{{ url_for('add_task') }}" method="POST">
+                        <input type="text" name="task" class="task-input" placeholder="Nueva tarea..." required data-testid="task-input">
+                        <button type="submit" class="btn" data-testid="add-task-btn">Agregar</button>
+                    </form>
+                </div>
+
+                <div class="task-list">
+                    {% if tasks %}
+                        {% for task in tasks %}
+                        <div class="task-item {% if task.completed %}completed{% endif %}" data-testid="task-item">
+                            <span data-testid="task-text">{{ task.text }}</span>
+                            <a href="{{ url_for('toggle_task', task_id=task.id) }}" data-testid="toggle-task-btn">
+                                {% if task.completed %}Deshacer{% else %}Completar{% endif %}
+                            </a>
+                            <a href="{{ url_for('delete_task', task_id=task.id) }}" data-testid="delete-task-btn" 
+                               onclick="return confirm('¿Eliminar esta tarea?')">Eliminar</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div data-testid="empty-state">No hay tareas. ¡Agrega una nueva!</div>
+                    {% endif %}
+                </div>
+            </div>
         </body>
         </html>
         EOF
